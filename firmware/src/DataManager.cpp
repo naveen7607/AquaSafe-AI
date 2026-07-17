@@ -57,18 +57,15 @@ void DataManager::update() {
         WaterQuality::evaluate(currentData);
         
         // Output diagnostics to Serial Monitor
-        Serial.print("[Telemetry] pH: "); Serial.print(currentData.phWorking ? String(currentData.pH, 2) : "NW");
-        Serial.print(" | TDS: "); Serial.print(currentData.tdsWorking ? String(currentData.tds) + " ppm" : "NW");
-        Serial.print(" | Temp: "); Serial.print(currentData.tempWorking ? String(currentData.temperature, 1) + " C" : "NW");
-        Serial.print(" | Turbidity: "); Serial.print(currentData.turbidityWorking ? String(currentData.turbidity) + "%" : "NW");
-        Serial.print(" | Score: "); Serial.print(currentData.waterScore);
-        Serial.print(" | Status: ");
+        Serial.println("---");
+        Serial.print("[Quality]  Score   = " + String(currentData.waterScore) + "/100        | Status = ");
         switch (currentData.overallStatus) {
             case STATUS_SAFE: Serial.println("SAFE"); break;
             case STATUS_WARNING: Serial.println("WARNING (" + currentData.reason + ")"); break;
             case STATUS_DANGER: Serial.println("DANGER (" + currentData.reason + ")"); break;
             case STATUS_ERROR: Serial.println("FAULT (" + currentData.reason + ")"); break;
         }
+        Serial.println("--------------------------------------------------");
         
         lastSensorReadTime = now;
     }

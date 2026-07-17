@@ -49,7 +49,17 @@ void Sensors::readAll(SensorData &data) {
     data.turbidity = readTurbidityValue(rawTurbidityVolt);
     data.turbidityWorking = checkTurbidityHealth(rawTurbidityVolt);
 
-    // Detailed hardware diagnostics printing has been disabled to keep the Serial Monitor clean.
+    // Print structured sensor data on separate lines with raw voltages
+    Serial.println("\n--------------------------------------------------");
+    Serial.println("[AquaSafe AI - Sensor Diagnostic Feed]");
+    Serial.printf("pH:        Voltage = %5.3f V | Value = %5.2f pH  | Status = %s\n", 
+                  rawPHVolt, data.pH, data.phWorking ? "WORKING" : "FAULT (NW)");
+    Serial.printf("TDS:       Voltage = %5.3f V | Value = %4d ppm  | Status = %s\n", 
+                  rawTDSVolt, data.tds, data.tdsWorking ? "WORKING" : "FAULT (NW)");
+    Serial.printf("Turbidity: Voltage = %5.3f V | Value = %4d %%    | Status = %s\n", 
+                  rawTurbidityVolt, data.turbidity, data.turbidityWorking ? "WORKING" : "FAULT (NW)");
+    Serial.printf("Temp:      Value   = %5.2f C                  | Status = %s\n", 
+                  data.temperature, data.tempWorking ? "WORKING" : "FAULT (NW)");
 }
 
 float Sensors::readPHValue(float &rawVoltage) {
