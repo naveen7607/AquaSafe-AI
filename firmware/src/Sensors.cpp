@@ -49,22 +49,7 @@ void Sensors::readAll(SensorData &data) {
     data.turbidity = readTurbidityValue(rawTurbidityVolt);
     data.turbidityWorking = checkTurbidityHealth(rawTurbidityVolt);
 
-    // Reconstruct raw ADC values for logging
-    int phADC = (int)round((rawPHVolt / ADC_REF_VOLTAGE) * ADC_RESOLUTION);
-    int tdsADC = (int)round((rawTDSVolt / ADC_REF_VOLTAGE) * ADC_RESOLUTION);
-    int turbADC = (int)round((rawTurbidityVolt / ADC_REF_VOLTAGE) * ADC_RESOLUTION);
-
-    // Print detailed hardware diagnostics to Serial Monitor
-    Serial.println("\n===== [HARDWARE DIAGNOSTICS] =====");
-    Serial.printf("pH:        Raw ADC = %4d | Voltage = %5.3f V | pH Value = %5.2f | Status = %s\n", 
-                  phADC, rawPHVolt, data.pH, data.phWorking ? "WORKING" : "FAULT (NW)");
-    Serial.printf("TDS:       Raw ADC = %4d | Voltage = %5.3f V | TDS Value = %3d ppm | Status = %s\n", 
-                  tdsADC, rawTDSVolt, data.tds, data.tdsWorking ? "WORKING" : "FAULT (NW)");
-    Serial.printf("Turbidity: Raw ADC = %4d | Voltage = %5.3f V | Turb Pct  = %3d %%   | Status = %s\n", 
-                  turbADC, rawTurbidityVolt, data.turbidity, data.turbidityWorking ? "WORKING" : "FAULT (NW)");
-    Serial.printf("Temp:      Value   = %5.2f C  | Status = %s\n", 
-                  data.temperature, data.tempWorking ? "WORKING" : "FAULT (NW)");
-    Serial.println("==================================");
+    // Detailed hardware diagnostics printing has been disabled to keep the Serial Monitor clean.
 }
 
 float Sensors::readPHValue(float &rawVoltage) {
@@ -106,7 +91,7 @@ float Sensors::readTemperatureValue() {
 int Sensors::readTurbidityValue(float &rawVoltage) {
     int rawADC = Utilities::averageAnalogRead(TURBIDITY_PIN);
     rawVoltage = (rawADC / ADC_RESOLUTION) * ADC_REF_VOLTAGE;
-    Serial.printf("[TURB DEBUG] Raw ADC = %d | Voltage = %.3f V\n", rawADC, rawVoltage);
+
     
     float turbidityPct = 0.0;
     
