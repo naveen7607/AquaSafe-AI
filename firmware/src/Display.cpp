@@ -61,12 +61,18 @@ void Display::update(const SensorData &data) {
         lastScreenSwitchTime = millis();
     }
 
-    if (currentScreen == 0) {
-        showScreen3(data); // Status/Reason screen is shown first
-    } else if (currentScreen == 1) {
-        showScreen1(data); // Sensor values screen is shown second
-    } else {
-        showScreen2(data); // Sensor faults screen is shown third (only if hasFault is true)
+    // Rate-limit I2C writes to 5Hz (every 200ms) to prevent I2C bus flooding and watchdog (WDT) resets
+    static unsigned long lastLcdWriteTime = 0;
+    if (millis() - lastLcdWriteTime >= 200) {
+        lastLcdWriteTime = millis();
+
+        if (currentScreen == 0) {
+            showScreen3(data); // Status/Reason screen is shown first
+        } else if (currentScreen == 1) {
+            showScreen1(data); // Sensor values screen is shown second
+        } else {
+            showScreen2(data); // Sensor faults screen is shown third (only if hasFault is true)
+        }
     }
 }
 
