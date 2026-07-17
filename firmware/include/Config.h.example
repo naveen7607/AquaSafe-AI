@@ -1,0 +1,48 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// --- Hardware Pins Configuration ---
+
+// Sensors
+#define PH_PIN 33          // pH Sensor PO Analog pin (ADC1, supports pull-down)
+#define TDS_PIN 35         // TDS Sensor Analog pin (ADC1, clean analog input)
+#define TURBIDITY_PIN 32   // Turbidity Sensor Analog pin (ADC1, supports pull-down)
+#define TEMP_PIN 13        // DS18B20 Data pin (Digital 1-wire, moved to free up ADC1)
+
+// Alert Indicators
+#define GREEN_LED 26       // Green LED pin (Digital Output, moved from ADC1)
+#define YELLOW_LED 27      // Yellow LED pin (27)
+#define RED_LED 14         // Red LED pin (14)
+#define BUZZER_PIN 25      // Active Buzzer pin (Digital Output, moved from ADC1)
+
+// LCD (16x2 I2C Interface)
+// SDA: Connect to ESP32 GPIO 21
+// SCL: Connect to ESP32 GPIO 22
+#define LCD_I2C_ADDR 0x27  // Standard PCF8574 I2C Address (some modules use 0x3F)
+#define LCD_SDA 21
+#define LCD_SCL 22
+#define LCD_COLS 16
+#define LCD_ROWS 2
+
+// --- Feature Configuration ---
+#define ENABLE_WIFI 1       // Set to 1 to enable Wi-Fi connection
+#define ENABLE_THINGSPEAK 1 // Set to 1 to enable ThingSpeak data uploading
+#define ENABLE_FIREBASE 0   // Set to 0 to disable Firebase (Removed from website, optional in firmware)
+
+// --- WiFi Configuration ---
+#define WIFI_SSID "YOUR_WIFI_SSID"
+#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+
+// --- ThingSpeak Configuration ---
+#define THINGSPEAK_API_WRITE_KEY "YOUR_THINGSPEAK_WRITE_KEY"
+
+// --- Firebase Configuration ---
+// Note: We use REST API over HTTPS for reliability without heavy libraries
+#define FIREBASE_HOST "your-project-id-default-rtdb.firebaseio.com"
+#define FIREBASE_AUTH "YOUR_FIREBASE_DATABASE_SECRET"
+
+// --- System Loop Timings ---
+#define SENSOR_READ_INTERVAL 3000   // Read sensors every 3 seconds
+#define CLOUD_UPLOAD_INTERVAL 30000 // Upload to cloud every 15 seconds (ThingSpeak minimum allowed rate is 15s)
+
+#endif // CONFIG_H

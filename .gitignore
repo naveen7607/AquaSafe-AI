@@ -1,0 +1,11 @@
+# Build caches and local directories
+firmware/.pio/
+firmware/.vscode/
+.vscode/
+
+# Local configuration files containing sensitive credentials (API Keys, WiFi Passwords)
+firmware/include/Config.h
+
+# OS generated files
+.DS_Store
+Thumbs.db

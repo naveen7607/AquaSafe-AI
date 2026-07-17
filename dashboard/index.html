@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSafe AI - Water Quality Dashboard</title>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for beautiful graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-droplet brand-icon"></i>
+                <div class="brand-text">
+                    <h1>AquaSafe AI</h1>
+                    <span>RURAL WATER QUALITY</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="live"><i class="fa-solid fa-gauge-high"></i> Live Monitor</button>
+                <button class="nav-item" data-tab="analytics"><i class="fa-solid fa-chart-line"></i> Analytics</button>
+                <button class="nav-item" data-tab="alerts"><i class="fa-solid fa-bell"></i> Alerts <span class="badge" id="alert-count">0</span></button>
+                <button class="nav-item" data-tab="settings"><i class="fa-solid fa-gears"></i> Thresholds</button>
+                <button class="nav-item" data-tab="simulator"><i class="fa-solid fa-microchip"></i> ESP32 Simulator</button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="btn btn-secondary btn-sm" id="change-connection-btn" style="width: 100%; margin-bottom: 12px; font-size: 11px; padding: 8px; justify-content: center;"><i class="fa-solid fa-square-rss"></i> Change TS Channel</button>
+                <div class="device-status offline" id="device-status">
+                    <span class="status-dot"></span>
+                    <span id="status-text">ESP32: Simulated</span>
+                </div>
+                <div class="version">Firmware: v1.0.0</div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+            
+            <!-- HEADER -->
+            <header class="top-bar">
+                <div class="page-title">
+                    <h2 id="current-tab-title">Live Monitor</h2>
+                    <p id="current-tab-desc">Real-time parameters, health metrics, and overall score.</p>
+                </div>
+                <div class="system-time">
+                    <i class="fa-regular fa-clock"></i>
+                    <span id="live-time">12:34 PM</span>
+                </div>
+            </header>
+
+            <!-- TAB 1: LIVE MONITOR -->
+            <section class="tab-content active" id="tab-live">
+                <!-- TOP BANNER & SCORE OVERVIEW -->
+                <div class="dashboard-grid-top">
+                    <!-- Status Card -->
+                    <div class="status-card status-safe" id="overall-status-card">
+                        <div class="card-glow"></div>
+                        <span class="label">System Status</span>
+                        <h3 id="overall-status-value">SAFE</h3>
+                        <p id="overall-status-reason">Water quality is within optimal guidelines.</p>
+                        <i class="fa-solid fa-circle-check status-icon" id="overall-status-icon"></i>
+                    </div>
+                    
+                    <!-- Score Card -->
+                    <div class="score-card">
+                        <div class="score-gauge">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring__circle-bg" stroke="rgba(255, 255, 255, 0.05)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60" />
+                                <circle class="progress-ring__circle" id="score-ring" stroke="#10b981" stroke-width="8" fill="transparent" r="50" cx="60" cy="60" />
+                            </svg>
+                            <div class="score-text">
+                                <span id="score-number">94</span>
+                                <span class="score-max">/100</span>
+                            </div>
+                        </div>
+                        <div class="score-info">
+                            <h4>Water Quality Score</h4>
+                            <p>Weighted safety index calculated across pH, TDS, temperature, and turbidity.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SENSOR READINGS GRID -->
+                <div class="sensor-grid">
+                    <!-- Card 1: pH -->
+                    <div class="sensor-card" id="card-ph">
+                        <div class="sensor-header">
+                            <span class="icon-wrap"><i class="fa-solid fa-flask"></i></span>
+                            <span class="status-tag tag-safe" id="ph-status">Safe</span>
+                        </div>
+                        <div class="sensor-body">
+                            <h3>pH Level</h3>
+                            <div class="value-wrap">
+                                <span class="value" id="val-ph">7.20</span>
+                                <span class="unit">pH</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-indicator" id="bar-ph" style="left: 51%;"></div>
+                            </div>
+                            <div class="range-labels">
+                                <span>Acidic</span>
+                                <span>Optimal (6.5-8.5)</span>
+                                <span>Alkaline</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: TDS -->
+                    <div class="sensor-card" id="card-tds">
+                        <div class="sensor-header">
+                            <span class="icon-wrap"><i class="fa-solid fa-cubes"></i></span>
+                            <span class="status-tag tag-safe" id="tds-status">Safe</span>
+                        </div>
+                        <div class="sensor-body">
+                            <h3>Total Dissolved Solids</h3>
+                            <div class="value-wrap">
+                                <span class="value" id="val-tds">245</span>
+                                <span class="unit">ppm</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="bar-tds" style="width: 40.8%;"></div>
+                            </div>
+                            <div class="range-labels">
+                                <span>0</span>
+                                <span>Limit (300)</span>
+                                <span>1000+</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Temperature -->
+                    <div class="sensor-card" id="card-temp">
+                        <div class="sensor-header">
+                            <span class="icon-wrap"><i class="fa-solid fa-thermometer"></i></span>
+                            <span class="status-tag tag-safe" id="temp-status">Safe</span>
+                        </div>
+                        <div class="sensor-body">
+                            <h3>Temperature</h3>
+                            <div class="value-wrap">
+                                <span class="value" id="val-temp">28.0</span>
+                                <span class="unit">°C</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="bar-temp" style="width: 46.6%;"></div>
+                            </div>
+                            <div class="range-labels">
+                                <span>Freezing</span>
+                                <span>Warm (30)</span>
+                                <span>Danger (40+)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Turbidity -->
+                    <div class="sensor-card" id="card-turb">
+                        <div class="sensor-header">
+                            <span class="icon-wrap"><i class="fa-solid fa-eye-slash"></i></span>
+                            <span class="status-tag tag-safe" id="turb-status">Safe</span>
+                        </div>
+                        <div class="sensor-body">
+                            <h3>Turbidity</h3>
+                            <div class="value-wrap">
+                                <span class="value" id="val-turb">18</span>
+                                <span class="unit">%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="bar-turb" style="width: 18%;"></div>
+                            </div>
+                            <div class="range-labels">
+                                <span>0% (Clear)</span>
+                                <span>Limit (15%)</span>
+                                <span>100% (Muddy)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: ANALYTICS -->
+            <section class="tab-content" id="tab-analytics">
+                <div class="analytics-controls">
+                    <button class="btn btn-tab active" data-range="day">Daily</button>
+                    <button class="btn btn-tab" data-range="week">Weekly</button>
+                    <button class="btn btn-tab" data-range="month">Monthly</button>
+                </div>
+                <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%;">
+                    <!-- Chart 1: pH -->
+                    <div class="chart-card" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 20px; height: 260px;">
+                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--color-safe);"><i class="fa-solid fa-flask"></i> pH Level</h4>
+                        <div style="height: calc(100% - 25px); width: 100%;"><canvas id="chart-ph"></canvas></div>
+                    </div>
+                    
+                    <!-- Chart 2: TDS -->
+                    <div class="chart-card" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 20px; height: 260px;">
+                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--color-warning);"><i class="fa-solid fa-cubes"></i> TDS Level (ppm)</h4>
+                        <div style="height: calc(100% - 25px); width: 100%;"><canvas id="chart-tds"></canvas></div>
+                    </div>
+
+                    <!-- Chart 3: Temperature -->
+                    <div class="chart-card" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 20px; height: 260px;">
+                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--color-danger);"><i class="fa-solid fa-thermometer"></i> Temperature (°C)</h4>
+                        <div style="height: calc(100% - 25px); width: 100%;"><canvas id="chart-temp"></canvas></div>
+                    </div>
+
+                    <!-- Chart 4: Turbidity -->
+                    <div class="chart-card" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 20px; height: 260px;">
+                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #3b82f6;"><i class="fa-solid fa-eye-slash"></i> Turbidity (%)</h4>
+                        <div style="height: calc(100% - 25px); width: 100%;"><canvas id="chart-turb"></canvas></div>
+                    </div>
+
+                    <!-- Chart 5: Water Score -->
+                    <div class="chart-card" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 20px; height: 260px;">
+                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);"><i class="fa-solid fa-gauge-simple-high"></i> Water Quality Score</h4>
+                        <div style="height: calc(100% - 25px); width: 100%;"><canvas id="chart-score"></canvas></div>
+                    </div>
+
+                    <!-- Chart 6: Safety Status -->
+                    <div class="chart-card" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 20px; height: 260px;">
+                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--color-error);"><i class="fa-solid fa-triangle-exclamation"></i> Safety Status</h4>
+                        <div style="height: calc(100% - 25px); width: 100%;"><canvas id="chart-status"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: ALERTS -->
+            <section class="tab-content" id="tab-alerts">
+                <div class="alerts-header">
+                    <h3>Alert Log History</h3>
+                    <button class="btn btn-danger" id="clear-alerts-btn"><i class="fa-solid fa-trash-can"></i> Clear Logs</button>
+                </div>
+                <div class="alerts-list-container">
+                    <table class="alerts-table">
+                        <thead>
+                            <tr>
+                                <th>Severity</th>
+                                <th>Message</th>
+                                <th>Parameter Value</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alerts-tbody">
+                            <!-- Populated dynamically by javascript -->
+                            <tr id="no-alerts-row">
+                                <td colspan="4" class="no-data">No alerts logged. System is operating safely.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 4: SETTINGS -->
+            <section class="tab-content" id="tab-settings">
+                <div class="settings-grid" style="display: block;">
+                    <!-- Threshold Settings Form -->
+                    <div class="settings-card" style="max-width: 650px; margin: 0 auto;">
+                        <h3><i class="fa-solid fa-sliders"></i> Alert Ranges Configuration</h3>
+                        <p class="settings-subtitle">Adjust limits for warnings and danger flags (system limits).</p>
+                        
+                        <div class="form-group">
+                            <label>pH Range Limits</label>
+                            <div class="range-inputs">
+                                <div>
+                                    <span>Danger Low:</span>
+                                    <input type="number" step="0.1" id="cfg-ph-danger-low" value="5.5">
+                                </div>
+                                <div>
+                                    <span>Warning Low:</span>
+                                    <input type="number" step="0.1" id="cfg-ph-warn-low" value="6.5">
+                                </div>
+                                <div>
+                                    <span>Warning High:</span>
+                                    <input type="number" step="0.1" id="cfg-ph-warn-high" value="8.5">
+                                </div>
+                                <div>
+                                    <span>Danger High:</span>
+                                    <input type="number" step="0.1" id="cfg-ph-danger-high" value="9.0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>TDS Limits (ppm)</label>
+                            <div class="range-inputs">
+                                <div>
+                                    <span>Warning Limit:</span>
+                                    <input type="number" id="cfg-tds-warn" value="300">
+                                </div>
+                                <div>
+                                    <span>Danger Limit:</span>
+                                    <input type="number" id="cfg-tds-danger" value="600">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Temperature Thresholds (°C)</label>
+                            <div class="range-inputs">
+                                <div>
+                                    <span>Warning Threshold:</span>
+                                    <input type="number" step="0.5" id="cfg-temp-warn" value="30.0">
+                                </div>
+                                <div>
+                                    <span>Danger Threshold:</span>
+                                    <input type="number" step="0.5" id="cfg-temp-danger" value="40.0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Turbidity Thresholds (%)</label>
+                            <div class="range-inputs">
+                                <div>
+                                    <span>Warning Threshold:</span>
+                                    <input type="number" id="cfg-turb-warn" value="5">
+                                </div>
+                                <div>
+                                    <span>Danger Threshold:</span>
+                                    <input type="number" id="cfg-turb-danger" value="15">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="save-settings-btn" style="width: 100%; justify-content: center; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> Apply Changes</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: SIMULATOR -->
+            <section class="tab-content" id="tab-simulator">
+                <div class="simulator-layout">
+                    <!-- Sliders panel -->
+                    <div class="simulator-panel" style="max-width: 100%; grid-column: span 1;">
+                        <h3><i class="fa-solid fa-flask-vial"></i> Virtual Laboratory Bench</h3>
+                        <p class="panel-desc">Adjust the parameters on each sensor beaker to simulate raw hardware behavior.</p>
+                        
+                        <div class="lab-bench">
+                            <!-- Beaker 1: pH -->
+                            <div class="beaker-card" id="beaker-card-ph">
+                                <div class="beaker-visual">
+                                    <div class="sensor-probe ph-probe"></div>
+                                    <div class="water-container">
+                                        <div class="water" id="water-ph"></div>
+                                    </div>
+                                    <div class="beaker-glass"></div>
+                                </div>
+                                <div class="beaker-details">
+                                    <h4>pH Electrode</h4>
+                                    <div class="sim-label">
+                                        <span>pH: <strong id="sim-lbl-ph">7.2</strong></span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="sim-work-ph" checked>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                    <input type="range" min="0.0" max="14.0" step="0.1" value="7.2" class="sim-slider" id="sim-val-ph">
+                                </div>
+                            </div>
+
+                            <!-- Beaker 2: TDS -->
+                            <div class="beaker-card" id="beaker-card-tds">
+                                <div class="beaker-visual">
+                                    <div class="sensor-probe tds-probe"></div>
+                                    <div class="water-container">
+                                        <div class="water" id="water-tds">
+                                            <div class="particles-container" id="particles-tds"></div>
+                                        </div>
+                                    </div>
+                                    <div class="beaker-glass"></div>
+                                </div>
+                                <div class="beaker-details">
+                                    <h4>TDS Conductivity</h4>
+                                    <div class="sim-label">
+                                        <span>TDS: <strong id="sim-lbl-tds">245</strong> ppm</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="sim-work-tds" checked>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                    <input type="range" min="0" max="1000" step="5" value="245" class="sim-slider" id="sim-val-tds">
+                                </div>
+                            </div>
+
+                            <!-- Beaker 3: Temperature -->
+                            <div class="beaker-card" id="beaker-card-temp">
+                                <div class="beaker-visual">
+                                    <div class="sensor-probe temp-probe"></div>
+                                    <div class="water-container">
+                                        <div class="water" id="water-temp"></div>
+                                    </div>
+                                    <div class="vapors-container" id="vapors-temp"></div>
+                                    <div class="beaker-glass"></div>
+                                </div>
+                                <div class="beaker-details">
+                                    <h4>DS18B20 Temp Probe</h4>
+                                    <div class="sim-label">
+                                        <span>Temp: <strong id="sim-lbl-temp">28.0</strong> °C</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="sim-work-temp" checked>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                    <input type="range" min="0.0" max="60.0" step="0.5" value="28.0" class="sim-slider" id="sim-val-temp">
+                                </div>
+                            </div>
+
+                            <!-- Beaker 4: Turbidity -->
+                            <div class="beaker-card" id="beaker-card-turb">
+                                <div class="beaker-visual">
+                                    <div class="sensor-probe turb-probe"></div>
+                                    <div class="water-container">
+                                        <div class="water" id="water-turb"></div>
+                                    </div>
+                                    <div class="beaker-glass"></div>
+                                </div>
+                                <div class="beaker-details">
+                                    <h4>Turbidity Optical</h4>
+                                    <div class="sim-label">
+                                        <span>Turb: <strong id="sim-lbl-turb">18</strong> %</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="sim-work-turb" checked>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                    <input type="range" min="0" max="100" step="1" value="18" class="sim-slider" id="sim-val-turb">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Simulate Button -->
+                        <button class="btn btn-primary" id="sim-run-btn" style="width: 100%; margin-top: 15px; justify-content: center;"><i class="fa-solid fa-play"></i> Run Simulation</button>
+                    </div>
+
+                    <!-- Simulator details -->
+                    <div class="simulator-panel explanation-panel">
+                        <h3><i class="fa-solid fa-circle-nodes"></i> How to Demo</h3>
+                        <ol class="demo-instructions">
+                            <li>Ensure the connection status in the sidebar is set to <strong>ESP32: Simulated</strong>.</li>
+                            <li>Move any slider (e.g. pH to 5.0) to see the main status immediately switch to <strong>WARNING</strong> (yellow) or <strong>DANGER</strong> (red) and add logs under the Alerts tab.</li>
+                            <li>Disable a sensor checkbox (e.g. turn off "pH Level" health toggle) to inspect hardware fault reporting:
+                                <ul>
+                                    <li>Status switches to <strong>SENSOR ERROR</strong></li>
+                                    <li>Affected card displays <strong>NW</strong> (Not Working) instead of values</li>
+                                    <li>Sound buzzer alerts will simulate triggering</li>
+                                </ul>
+                            </li>
+                            <li>If a Firebase Realtime Database is connected in Settings, checking the <strong>"Publish simulator values to Cloud Database"</strong> button will push local updates to Firebase so that multiple devices sync instantly!</li>
+                        </ol>
+                        
+                        <!-- Simulation Result Box -->
+                        <div class="sim-result-box" id="sim-result-box" style="margin-top: 15px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(0, 0, 0, 0.15); display: none; width: 100%;">
+                            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;"><i class="fa-solid fa-square-poll-vertical"></i> Simulation Result</h4>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span class="status-tag" id="sim-res-status" style="font-size: 11px;">SAFE</span>
+                                <span id="sim-res-score" style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Score: --/100</span>
+                            </div>
+                            <p id="sim-res-reason" style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">Reason: --</p>
+                        </div>
+                        
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Startup Modal Overlay -->
+    <div class="modal-overlay" id="startup-modal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #0f172a; z-index: 10000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 30px; width: 90%; max-width: 420px; box-shadow: var(--shadow-lg);">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 42px; color: var(--color-safe); margin-bottom: 12px;"><i class="fa-solid fa-droplet"></i></div>
+                <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary);">AquaSafe AI</h2>
+                <p style="font-size: 13px; color: var(--text-secondary);">Enter your ThingSpeak Channel details to sync live telemetry.</p>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">ThingSpeak Channel ID</label>
+                <input type="text" id="modal-ts-channel" value="3425398" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(255,255,255,0.03); color: var(--text-primary); font-family: 'Outfit'; font-size: 14px;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Read API Key (Optional)</label>
+                <input type="text" id="modal-ts-read-key" placeholder="Enter key for private channels" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(255,255,255,0.03); color: var(--text-primary); font-family: 'Outfit'; font-size: 14px;">
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-primary" id="modal-connect-btn" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-plug"></i> Connect Live Feed</button>
+                <button class="btn btn-secondary" id="modal-sim-btn" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; border: 1px solid var(--border-color); background-color: transparent; color: var(--text-secondary); font-weight: 500;"><i class="fa-solid fa-server"></i> Use Mock Simulator</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Application Javascript -->
+    <script src="app.js"></script>
+</body>
+</html>
