@@ -23,8 +23,11 @@ void Alarm::update(Status status) {
         digitalWrite(GREEN_LED, HIGH);
         digitalWrite(YELLOW_LED, LOW);
         digitalWrite(RED_LED, LOW);
-        noTone(BUZZER_PIN);
-        digitalWrite(BUZZER_PIN, LOW); // Explicit grounding to ensure silence
+        if (buzzerState) {
+            noTone(BUZZER_PIN);
+            digitalWrite(BUZZER_PIN, LOW); // Explicit grounding to ensure silence
+            buzzerState = false;
+        }
         return;
     }
     
@@ -44,10 +47,16 @@ void Alarm::update(Status status) {
         unsigned long cyclePeriod = 1500;
         unsigned long phase = (now - lastBuzzerTime) % cyclePeriod;
         if (phase < 100) {
-            tone(BUZZER_PIN, 1000); // 1 kHz pitch
+            if (!buzzerState) {
+                tone(BUZZER_PIN, 1000); // 1 kHz pitch
+                buzzerState = true;
+            }
         } else {
-            noTone(BUZZER_PIN);
-            digitalWrite(BUZZER_PIN, LOW);
+            if (buzzerState) {
+                noTone(BUZZER_PIN);
+                digitalWrite(BUZZER_PIN, LOW);
+                buzzerState = false;
+            }
         }
     } 
     else if (status == STATUS_DANGER) {
@@ -63,10 +72,16 @@ void Alarm::update(Status status) {
         unsigned long cyclePeriod = 400;
         unsigned long phase = (now - lastBuzzerTime) % cyclePeriod;
         if (phase < 100) {
-            tone(BUZZER_PIN, 1500); // 1.5 kHz pitch (sharper tone)
+            if (!buzzerState) {
+                tone(BUZZER_PIN, 1500); // 1.5 kHz pitch (sharper tone)
+                buzzerState = true;
+            }
         } else {
-            noTone(BUZZER_PIN);
-            digitalWrite(BUZZER_PIN, LOW);
+            if (buzzerState) {
+                noTone(BUZZER_PIN);
+                digitalWrite(BUZZER_PIN, LOW);
+                buzzerState = false;
+            }
         }
     }
     else if (status == STATUS_ERROR) {
@@ -82,10 +97,16 @@ void Alarm::update(Status status) {
         unsigned long cyclePeriod = 600;
         unsigned long phase = (now - lastBuzzerTime) % cyclePeriod;
         if (phase < 300) {
-            tone(BUZZER_PIN, 1800); // 1.8 kHz pitch (loudest alert)
+            if (!buzzerState) {
+                tone(BUZZER_PIN, 1800); // 1.8 kHz pitch (loudest alert)
+                buzzerState = true;
+            }
         } else {
-            noTone(BUZZER_PIN);
-            digitalWrite(BUZZER_PIN, LOW);
+            if (buzzerState) {
+                noTone(BUZZER_PIN);
+                digitalWrite(BUZZER_PIN, LOW);
+                buzzerState = false;
+            }
         }
     }
 }
@@ -96,4 +117,5 @@ void Alarm::turnOffAll() {
     digitalWrite(RED_LED, LOW);
     noTone(BUZZER_PIN);
     digitalWrite(BUZZER_PIN, LOW);
+    buzzerState = false;
 }
